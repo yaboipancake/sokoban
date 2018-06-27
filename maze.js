@@ -7,7 +7,7 @@ const youWonDiv = document.getElementById("youWonDiv")
 const delta = 33;
 
 // Coordinates of the player's avatar.
-let avatarRow; 
+let avatarRow;
 let avatarCol;
 
 // Separate array for keeping track of the moving crates.
@@ -18,7 +18,45 @@ const crates = [];
 // (S)tarting position, and the (F)inishing position, in sokoban, we
 // have to keep track of (O)pen storage locations, (B)oxes, and
 // e(X)actly where to move those boxes to. 
-//
+for (let row = 0; row < map.length; row++) {
+    const rowStr = map[row];
+    const rowDiv = document.createElement("div");
+
+    rowDiv.className = "row";
+    var crateRow = []
+
+
+    for (let i = 0; i < rowStr.length; i++) {
+        let cellClass = rowStr[i];
+        const cellDiv = document.createElement("div");
+        var newCrate = ""
+
+        cellDiv.className = "cell " + cellClass;
+        if (cellClass === "S") {
+            cellDiv.textContent = "S"
+            avatarRow = row
+            avatarCol = i
+        }
+        rowDiv.appendChild(cellDiv);
+
+        if (cellClass === "F") {
+            cellDiv.textContent = "F"
+        }
+
+        mazeDiv.appendChild(rowDiv);
+
+        if (cellClass === "B") {
+            newCrate = crate(row, i)
+        }
+        if (cellClass === "X") {
+            newCrate = crate(row, i)
+            cellDiv.className = "cell " + "O";
+        }
+        crateRow.push(newCrate)
+
+    }
+    crates.push(crateRow)
+}
 // Write a conditional that adds Xs to the "crateRow" variable but uses
 // an "O" class for the cell. "B"
 //
@@ -66,13 +104,34 @@ function move(dRow, dCol) {
 
     // Check if there is a crate there.
     const crate = crates[destRow][destCol];
+    if (crate) {
+        const destcrateRow = destRow + dRow
+        const destcrateCol = destCol + dCol
+        if (map[destcrateRow][destcrateCol] === "W") {
+            return
+        }
+        if (crates[destcrateRow][destcrateCol] !== "") {
+            return
+        }
 
+        crates[destcrateRow][destcrateCol] = crate
+        crates[destRow][destCol] = ""
+        crate.style.top = destcrateRow * delta + "px"
+        crate.style.left = destcrateCol * delta + "px"
+
+
+    }
     // STEP 2 -----------------------------------------------------------------/
     // For the maze, it was enough to check that the place the player wanted to
     // move was empty. Here, we want to check if the place that the player wants
     // to move has a crate in it, and if so, if the space next to that crate is
     // empty. If so, we can move that crate.
-    //
+    if (destCell && destCell !== "W") {
+
+        avatarRow += dRow;
+        avatarCol += dCol;
+        redrawAvatar();
+    }
     // Write a conditional that checks whether or not a box can be pushed and
     // pushes it in the correct direction. A box can not be moved if:
     // - a wall exists where it is being pushed
@@ -85,6 +144,15 @@ function move(dRow, dCol) {
 }
 
 function checkForWin() {
+    for (let row = 0; row < map.length; row++) {
+        for (let column = 0; column < map[row].length; column++) {
+            if (crates[row][column]) {
+                if (map[row][column] !== "O" && map[row][column] !== "X") {
+                    return
+                }
+            }
+        }
+    }
     // STEP 3 -----------------------------------------------------------------/
     // Write a function that checks if the player won. A player wins when all
     // boxes are moved over all storage spaces.
@@ -92,18 +160,18 @@ function checkForWin() {
 }
 
 document.addEventListener('keydown', (event) => {
-    switch(event.key) {
+    switch (event.key) {
         case "ArrowDown":
-            move(1,0);
+            move(1, 0);
             break;
         case "ArrowUp":
-            move(-1,0);
+            move(-1, 0);
             break;
         case "ArrowLeft":
-            move(0,-1);
+            move(0, -1);
             break;
         case "ArrowRight":
-            move(0,1);
+            move(0, 1);
             break;
         default:
             console.log('keydown event\n\nkey: ' + event.key);
